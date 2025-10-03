@@ -25,32 +25,54 @@ export default function AppointmentStatus() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get appointment data from URL parameters
-    const firstName = searchParams.get("firstName");
-    const lastName = searchParams.get("lastName");
-    const email = searchParams.get("email");
-    const phone = searchParams.get("phone");
-    const appointmentType = searchParams.get("appointmentType");
-    const preferredDate = searchParams.get("preferredDate");
-    const preferredTime = searchParams.get("preferredTime");
-    const doctor = searchParams.get("doctor");
-    const symptoms = searchParams.get("symptoms");
+    // First, check for pending appointment data from localStorage (from login redirect)
+    const pendingAppointment = localStorage.getItem("pendingAppointment");
+    let appointmentFromStorage = null;
 
-    if (firstName && lastName && email) {
+    if (pendingAppointment) {
+      try {
+        appointmentFromStorage = JSON.parse(pendingAppointment);
+        // Clear the pending appointment data since we're now displaying it
+        localStorage.removeItem("pendingAppointment");
+      } catch (error) {
+        console.error("Error parsing pending appointment data:", error);
+      }
+    }
+
+    // If no stored appointment, try to get appointment data from URL parameters
+    if (!appointmentFromStorage) {
+      const firstName = searchParams.get("firstName");
+      const lastName = searchParams.get("lastName");
+      const email = searchParams.get("email");
+      const phone = searchParams.get("phone");
+      const appointmentType = searchParams.get("appointmentType");
+      const preferredDate = searchParams.get("preferredDate");
+      const preferredTime = searchParams.get("preferredTime");
+      const doctor = searchParams.get("doctor");
+      const symptoms = searchParams.get("symptoms");
+
+      if (firstName && lastName && email) {
+        appointmentFromStorage = {
+          firstName,
+          lastName,
+          email,
+          phone: phone || "",
+          appointmentType: appointmentType || "",
+          preferredDate: preferredDate || "",
+          preferredTime: preferredTime || "",
+          doctor: doctor || "",
+          symptoms: symptoms || "",
+        };
+      }
+    }
+
+    if (appointmentFromStorage) {
       // Generate a mock appointment ID and confirmation number
       const appointmentId = `APT-${Date.now().toString().slice(-6)}`;
       const confirmationNumber = `FC${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
 
       setAppointmentData({
-        firstName,
-        lastName,
-        email,
-        phone: phone || "",
-        appointmentType: appointmentType || "",
-        preferredDate: preferredDate || "",
-        preferredTime: preferredTime || "",
-        doctor: doctor || "",
-        symptoms: symptoms || "",
+        ...appointmentFromStorage,
         appointmentId,
         status: "Confirmed",
         confirmationNumber,

@@ -59,6 +59,31 @@ export default function BookAppointment() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
+      // Check if user is authenticated
+      const sessionData = localStorage.getItem("futurecare_session");
+      let isAuthenticated = false;
+
+      if (sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          if (session.expires > Date.now()) {
+            isAuthenticated = true;
+          } else {
+            localStorage.removeItem("futurecare_session");
+          }
+        } catch {
+          localStorage.removeItem("futurecare_session");
+        }
+      }
+
+      if (!isAuthenticated) {
+        // Store appointment data in localStorage for after login
+        localStorage.setItem("pending_appointment", JSON.stringify(formData));
+        // Redirect to login page
+        router.push("/login?redirect=book-appointment");
+        return;
+      }
+
       // Here you would typically send the data to your backend
       console.log("Form submitted:", formData);
 
